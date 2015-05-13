@@ -10,6 +10,7 @@ class Que
     @processed = 0
     @emitter = {}
     @isRunning = false
+    @end = false
     events.EventEmitter.call @emitter
     util.inherits @emitter, events.EventEmitter
     @_run()
@@ -24,12 +25,17 @@ class Que
     @isRunning = true
     if @queue.length == 0
       @isRunning = false
-      nextTick @_run.bind @
-      return
+      if @end
+        return
+      else
+        return nextTick @_run.bind @
 
     _Task = @queue.pop()
     _Task.processor _Task.data
     @processed += 1
     nextTick @_run.bind @
+
+  exit: () ->
+    @end = true
 
 exports = module.exports = Que
