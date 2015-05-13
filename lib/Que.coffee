@@ -21,21 +21,27 @@ class Que
     @queue.push new Task task
 
   process: (@processor) ->
-    @_run()
+    if @processor.length != 2
+      throw new Error '处理函数的参数数量必须为2'
+    @run()
 
-  _run: () ->
+  _done: () ->
+    console.log "done #{@processed}"
+    @processed += 1
+    nextTick @run.bind @
+
+  run: () ->
     if @queue.length == 0
       if @end
         return
       else
-        return nextTick @_run.bind @
+        return nextTick @run.bind @
 
-    _Task = @queue.pop()
-    @processor _Task.data
-    @processed += 1
-    nextTick @_run.bind @
+    _Task = @queue.shift()
+    @processor _Task.data, @_done.bind @
 
   exit: () ->
     @end = true
+
 
 exports = module.exports = Que
