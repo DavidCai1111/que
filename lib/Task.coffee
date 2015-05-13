@@ -1,4 +1,4 @@
 class Task
-  constructor: (@data, @processor) ->
+  constructor: (@data) ->
 
 exports = module.exports = Task
