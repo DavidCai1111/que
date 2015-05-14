@@ -14,13 +14,14 @@ class BasicQue
     @limit = 5
 
     @emitter.on 'push', ( () ->
+      console.log 'push'
       if @end == true
         @end = false
         @run()
     ).bind @
 
-    @.on = @emitter.on
-    @.emit = @emitter.emit
+    @on = @emitter.on
+    @emit = @emitter.emit
 
   getNumberOfProcessed: () ->
     @processed
@@ -29,22 +30,14 @@ class BasicQue
     @end
 
   getQueLength: () ->
-    ctx = @
-    new Promise (resolve) ->
-      resolve ctx.queue.length
+    Promise.resolve @queue.length
 
   push: (value) ->
-    ctx = @
-    co () ->
-      yield new Promise (resolve) ->
-        ctx.queue.push value
-        ctx.emitter.emit 'push'
-        resolve value
+    @queue.push value
+    @emitter.emit 'push'
 
   shift: () ->
-    ctx = @
-    new Promise (resolve) ->
-      resolve ctx.queue.shift()
+    Promise.resolve @queue.shift()
 
   process: (@processor) ->
     if @processor.length != 2
@@ -57,16 +50,14 @@ class BasicQue
     @.emit 'done', @processed
 
   run: () ->
-    ctx = @
-    co () ->
-      if ctx.running >= ctx.limit then return nextTick ctx.run.bind ctx
-      if (yield ctx.getQueLength()) == 0 then ctx.end = true
-      if ctx.end then return
-      task = yield ctx.shift()
-      console.dir task
-      ctx.running += 1
-      ctx.processor task, ctx._done.bind ctx
-      nextTick ctx.run.bind ctx
+    co.call @, () ->
+      if @running >= ctx.limit then return nextTick @run.bind @
+      if (yield @getQueLength()) == 0 then @end = true
+      if @end then return
+      task = yield @shift()
+      @running += 1
+      @processor task, @_done.bind @
+      nextTick @run.bind @
 
   stop: () ->
     @end = true
