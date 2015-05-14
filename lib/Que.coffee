@@ -28,6 +28,4 @@ class Que extends BasicQue
         result = JSON.parse result
         resolve result
 
-
-
 module.exports = Que
