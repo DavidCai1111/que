@@ -1,6 +1,7 @@
 events = require 'events'
 util = require 'util'
 Task = require './Task'
+moment = require 'moment'
 
 nextTick = if global.setImmediate == undefined then process.nextTick else global.setImmediate
 
@@ -8,17 +9,25 @@ class Que
   constructor: (@name = 'anonymous queue') ->
     @queue = []
     @processed = 0
-    @emitter = {}
     @end = false
+    @emitter = new events.EventEmitter()
     @showLog = false #TODO logger
-    events.EventEmitter.call @emitter
-    util.inherits @emitter, events.EventEmitter
+
+    @emitter.on 'push', ( () ->
+      if @end == true
+        @end = false
+        @run()
+    ).bind @
 
   getNumberOfProcessed: () ->
     @processed
 
+  isEnd: () ->
+    @end
+
   push: (task, processor) ->
     @queue.push new Task task
+    @emitter.emit 'push'
 
   process: (@processor) ->
     if @processor.length != 2
@@ -26,22 +35,22 @@ class Que
     @run()
 
   _done: () ->
-    console.log "done #{@processed}"
     @processed += 1
+    console.log "已完成: #{@processed}"
     nextTick @run.bind @
 
   run: () ->
-    if @queue.length == 0
-      if @end
-        return
-      else
-        return nextTick @run.bind @
+    if @queue.length == 0 then @end = true
+    if @end
+      return
 
     _Task = @queue.shift()
     @processor _Task.data, @_done.bind @
-
-  exit: () ->
+    nextTick @run.bind @
+  stop: () ->
     @end = true
 
+  restart: () ->
+    @end = false
 
 exports = module.exports = Que
