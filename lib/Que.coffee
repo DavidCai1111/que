@@ -51,6 +51,7 @@ class Que
     @end = true
 
   restart: () ->
-    @end = false
+    unless @queue.length == 0
+      @end = false
 
 exports = module.exports = Que
