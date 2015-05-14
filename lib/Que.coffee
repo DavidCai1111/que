@@ -1,66 +1,33 @@
-events = require 'events'
-util = require 'util'
-Task = require './Task'
-moment = require 'moment'
+redis = require 'redis'
+co = require 'co'
+BasicQue = require './BasicQue'
 
-nextTick = if global.setImmediate == undefined then process.nextTick else global.setImmediate
-
-class Que
+class Que extends BasicQue
   constructor: (@name = 'anonymous queue') ->
-    @queue = []
-    @processed = 0
-    @end = false
-    @emitter = new events.EventEmitter()
-    @showLog = false #TODO logger
-    @running = 0
-    @limit = 5
+    super @name
+    @redis = redis.createClient()
 
-    @emitter.on 'push', ( () ->
-      if @end == true
-        @end = false
-        @run()
-    ).bind @
+  push: (value) ->
+    ctx = @
+    if typeof value == 'function' then throw new Error "#{@name}: 传入的队列的必须是基本值或对象"
+    unless @redis then throw new Error "#{@name}: 这个任务队列已经关闭"
+    value = JSON.stringify value #确保非基本值类型也可被存储
 
-    @.on = @emitter.on
-    @.emit = @emitter.emit
+    new Pormise (resolve, reject) ->
+      ctx.redis.rpush [ctx.name, value], (err) ->
+        if err then reject err
+        ctx.emitter.emit 'push'
+        resolve value
 
-  getNumberOfProcessed: () ->
-    @processed
+  shift: () ->
+    ctx = @
+    console.log 'shift!'
+    new Promise (resolve, reject) ->
+      ctx.redis.lpop [ctx.name], (err, result) ->
+        if err then reject err
+        result = JSON.parse result
+        resolve result
 
-  isEnd: () ->
-    @end
 
-  push: (task, processor) ->
-    @queue.push new Task task
-    @emitter.emit 'push'
 
-  process: (@processor) ->
-    if @processor.length != 2
-      throw new Error '处理函数的参数数量必须为2'
-    @run()
-
-  _done: () ->
-    @processed += 1
-    @running -= 1
-    @.emit 'done', @processed
-
-  run: () ->
-    if @queue.length == 0 then @end = true
-    if @running >= @limit
-      return nextTick @run.bind @
-    if @end
-      return
-
-    _Task = @queue.shift()
-    @running += 1
-    @processor _Task.data, @_done.bind @
-    nextTick @run.bind @
-
-  stop: () ->
-    @end = true
-
-  restart: () ->
-    unless @queue.length == 0
-      @end = false
-
-exports = module.exports = Que
+module.exports = Que

@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "kue": "^0.9.3",
-    "moment": "^2.10.3"
+    "co": "^4.5.4",
+    "moment": "^2.10.3",
+    "redis": "^0.12.1"
   }
 }
