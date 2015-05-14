@@ -12,12 +12,17 @@ class Que
     @end = false
     @emitter = new events.EventEmitter()
     @showLog = false #TODO logger
+    @running = 0
+    @limit = 5
 
     @emitter.on 'push', ( () ->
       if @end == true
         @end = false
         @run()
     ).bind @
+
+    @.on = @emitter.on
+    @.emit = @emitter.emit
 
   getNumberOfProcessed: () ->
     @processed
@@ -36,17 +41,21 @@ class Que
 
   _done: () ->
     @processed += 1
-    console.log "已完成: #{@processed}"
-    nextTick @run.bind @
+    @running -= 1
+    @.emit 'done', @processed
 
   run: () ->
     if @queue.length == 0 then @end = true
+    if @running >= @limit
+      return nextTick @run.bind @
     if @end
       return
 
     _Task = @queue.shift()
+    @running += 1
     @processor _Task.data, @_done.bind @
     nextTick @run.bind @
+
   stop: () ->
     @end = true
 
