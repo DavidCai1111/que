@@ -14,7 +14,7 @@ class Que extends BasicQue
 
       value = JSON.stringify value #确保非基本值类型也可被存储
 
-      @redis.rpush [ctx.name, value], ((err) ->
+      @redis.rpush [@name, value], ((err) ->
         if err then reject err
         @emitter.emit 'push'
         resolve value
@@ -26,5 +26,11 @@ class Que extends BasicQue
         if err then reject err
         result = JSON.parse result
         resolve result
+
+  getQueLength : () ->
+    new Promise(resolve, reject) ->
+      @redis.llen @name , (err, length) ->
+        if err then reject err
+        resolve length
 
 module.exports = Que
