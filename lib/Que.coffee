@@ -8,17 +8,15 @@ class Que extends BasicQue
     @redis = redis.createClient()
 
   push: (value) ->
-    new Pormise (resolve, reject) ->
-      if typeof value == 'function' then reject new Error "#{@name}: 传入的队列的必须是基本值或对象"
-      unless @redis then reject new Error "#{@name}: 这个任务队列已经关闭"
+    if typeof value == 'function' then throw new Error "#{@name}: 传入的队列的必须是基本值或对象"
+    unless @redis then throw new Error "#{@name}: 这个任务队列已经关闭"
 
-      value = JSON.stringify value #确保非基本值类型也可被存储
+    value = JSON.stringify value #确保非基本值类型也可被存储
 
-      @redis.rpush [@name, value], ((err) ->
-        if err then reject err
-        @emitter.emit 'push'
-        resolve value
-      ).bind @
+    @redis.rpush [@name, value], ((err) ->
+      if err then reject err
+      @emitter.emit 'push', value
+    ).bind @
 
   shift: () ->
     new Promise (resolve, reject) ->
@@ -27,9 +25,9 @@ class Que extends BasicQue
         result = JSON.parse result
         resolve result
 
-  getQueLength : () ->
+  getQueLength: () ->
     new Promise(resolve, reject) ->
-      @redis.llen @name , (err, length) ->
+      @redis.llen @name, (err, length) ->
         if err then reject err
         resolve length
 
