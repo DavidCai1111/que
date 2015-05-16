@@ -39,14 +39,8 @@ class BasicQue
     Promise.resolve @queue.shift()
 
   process: (@processor) ->
-    if @processor.length != 2
-      throw new Error '处理函数的参数数量必须为2'
+    unless typeof @processor().then == 'function' then throw new Error '处理函数必须返回一个Promise'
     @run()
-
-  _done: () ->
-    @processed += 1
-    @running -= 1
-    @emit 'done', @processed
 
   run: () ->
     co.call @, () ->
@@ -55,7 +49,10 @@ class BasicQue
       if @end then return
       task = yield @shift()
       @running += 1
-      @processor task.data, @_done.bind @
+      result = yield @processor task.data
+      @processed += 1
+      @running -= 1
+      @emit 'done', result, @processed
       nextTick @run.bind @
 
   stop: () ->
