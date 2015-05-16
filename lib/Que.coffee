@@ -19,16 +19,18 @@ class Que extends BasicQue
     ).bind @
 
   shift: () ->
-    new Promise (resolve, reject) ->
+    new Promise ((resolve, reject) ->
       @redis.lpop [@name], (err, result) ->
         if err then reject err
         result = JSON.parse result
         resolve result
+    ).bind @
 
   getQueLength: () ->
-    new Promise(resolve, reject) ->
-      @redis.llen @name, (err, length) ->
+    new Promise ((resolve, reject) ->
+      @redis.llen [@name], (err, length) ->
         if err then reject err
         resolve length
+    ).bind @
 
 module.exports = Que

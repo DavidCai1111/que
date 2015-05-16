@@ -12,8 +12,7 @@ class BasicQue
     @showLog = false #TODO logger
     @running = 0
     @limit = 5
-
-    @emitter.on 'push', ( () ->
+    @emitter.on 'push', ( (value) ->
       console.log 'push'
       if @end == true
         @end = false
@@ -34,7 +33,7 @@ class BasicQue
 
   push: (value) ->
     @queue.push value
-    @emitter.emit 'push'
+    @emitter.emit 'push', value
 
   shift: () ->
     Promise.resolve @queue.shift()
@@ -51,7 +50,7 @@ class BasicQue
 
   run: () ->
     co.call @, () ->
-      if @running >= ctx.limit then return nextTick @run.bind @
+      if @running >= @limit then return nextTick @run.bind @
       if (yield @getQueLength()) == 0 then @end = true
       if @end then return
       task = yield @shift()
