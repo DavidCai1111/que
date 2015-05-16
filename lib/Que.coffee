@@ -1,4 +1,4 @@
-Redis = require 'redis'
+Redis = require './redis'
 co = require 'co'
 BasicQue = require './BasicQue'
 
@@ -34,7 +34,10 @@ class Que extends BasicQue
     ).bind @
 
   stop: () ->
-    Redis.exit @redis
-    @end = true
+    @redis.lrem [@name,0,-1], ((err, nRemoved) ->
+      Redis.releaseClient @redis
+      @end = true
+      console.log "清空队列并退出！清空了队列中剩余的#{nRemoved}个元素"
+    ).bind @
 
 module.exports = Que

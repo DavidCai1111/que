@@ -8,5 +8,5 @@ exports.createClient = () ->
 
   client
 
-exports.exit = (client) ->
+exports.releaseClient = (client) ->
   client.quit()

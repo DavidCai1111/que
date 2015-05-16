@@ -13,7 +13,6 @@ class BasicQue
     @running = 0
     @limit = 5
     @emitter.on 'push', ((value) ->
-      console.log 'push'
       if @end == true
         @end = false
         @run()
