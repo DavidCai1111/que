@@ -8,6 +8,7 @@ class BasicQue
   constructor: (@name = 'anonymous queue') ->
     @queue = []
     @processed = 0
+    @rejected = 0
     @end = false
     @emitter = new events.EventEmitter()
     @showLog = false #TODO logger
@@ -24,6 +25,9 @@ class BasicQue
 
   getNumberOfProcessed: () ->
     @processed
+
+  getNumberOfRejected: () ->
+    @rejected
 
   isEnd: () ->
     @end
@@ -64,9 +68,9 @@ class BasicQue
         @process task
       else
         console.error "【Que】第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，错误尝试次数已用尽，放弃此次任务"
-        @processed += 1
+        @rejected += 1
         @running -= 1
-        @emit 'retryFailed', error
+        @emit 'retryFailed', error, task.data
     ).bind @
 
   stop: () ->
