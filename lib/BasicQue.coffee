@@ -38,8 +38,8 @@ class BasicQue
   shift: () ->
     Promise.resolve @queue.shift()
 
-  process: (@processor) ->
-    unless typeof @processor().then == 'function' then throw new Error '处理函数必须返回一个Promise'
+  processor: (@processor) ->
+    unless typeof @processor().then == 'function' then throw new Error '【Que】处理函数必须返回一个Promise'
     @run()
 
   run: () ->
@@ -49,11 +49,25 @@ class BasicQue
       if @end then return
       task = yield @shift()
       @running += 1
+      @process task
+      nextTick @run.bind @
+
+  process: (task) ->
+    co.call @,() ->
       result = yield @processor task.data
       @processed += 1
       @running -= 1
       @emit 'done', result, @processed
-      nextTick @run.bind @
+    .catch ((error) ->
+      if task.retryCount > 0
+        console.error "【Que】第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，此任务还剩余的重试次数为#{task.retryCount--}次"
+        @process task
+      else
+        console.error "【Que】第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，错误尝试次数已用尽，放弃此次任务"
+        @processed += 1
+        @running -= 1
+        @emit 'retryFailed', error
+    ).bind @
 
   stop: () ->
     @end = true
