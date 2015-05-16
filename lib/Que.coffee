@@ -1,11 +1,11 @@
-redis = require 'redis'
+Redis = require 'redis'
 co = require 'co'
 BasicQue = require './BasicQue'
 
 class Que extends BasicQue
   constructor: (@name = 'anonymous queue') ->
     super @name
-    @redis = redis.createClient()
+    @redis = Redis.createClient()
 
   push: (value) ->
     if typeof value == 'function' then throw new Error "#{@name}: 传入的队列的必须是基本值或对象"
@@ -32,5 +32,9 @@ class Que extends BasicQue
         if err then reject err
         resolve length
     ).bind @
+
+  stop: () ->
+    Redis.exit @redis
+    @end = true
 
 module.exports = Que

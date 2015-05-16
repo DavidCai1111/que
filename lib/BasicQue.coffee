@@ -12,7 +12,7 @@ class BasicQue
     @showLog = false #TODO logger
     @running = 0
     @limit = 5
-    @emitter.on 'push', ( (value) ->
+    @emitter.on 'push', ((value) ->
       console.log 'push'
       if @end == true
         @end = false
@@ -46,7 +46,7 @@ class BasicQue
   _done: () ->
     @processed += 1
     @running -= 1
-    @.emit 'done', @processed
+    @emit 'done', @processed
 
   run: () ->
     co.call @, () ->
