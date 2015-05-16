@@ -1,6 +1,7 @@
-Redis = require './redis'
 co = require 'co'
+Redis = require './redis'
 BasicQue = require './BasicQue'
+Task = require './Task'
 
 class Que extends BasicQue
   constructor: (@name = 'anonymous queue') ->
@@ -11,7 +12,7 @@ class Que extends BasicQue
     if typeof value == 'function' then throw new Error "#{@name}: 传入的队列的必须是基本值或对象"
     unless @redis then throw new Error "#{@name}: 这个任务队列已经关闭"
 
-    value = JSON.stringify value #确保非基本值类型也可被存储
+    value = JSON.stringify (new Task value) #确保非基本值类型也可被存储
 
     @redis.rpush [@name, value], ((err) ->
       if err then reject err

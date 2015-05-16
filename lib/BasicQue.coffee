@@ -1,5 +1,6 @@
 events = require 'events'
 co = require 'co'
+Task = require './Task'
 
 nextTick = if global.setImmediate == undefined then process.nextTick else global.setImmediate
 
@@ -12,7 +13,7 @@ class BasicQue
     @showLog = false #TODO logger
     @running = 0
     @limit = 5
-    @emitter.on 'push', ((value) ->
+    @emitter.on 'push', ((task) ->
       if @end == true
         @end = false
         @run()
@@ -31,7 +32,7 @@ class BasicQue
     Promise.resolve @queue.length
 
   push: (value) ->
-    @queue.push value
+    @queue.push new Task value
     @emitter.emit 'push', value
 
   shift: () ->
@@ -54,7 +55,7 @@ class BasicQue
       if @end then return
       task = yield @shift()
       @running += 1
-      @processor task, @_done.bind @
+      @processor task.data, @_done.bind @
       nextTick @run.bind @
 
   stop: () ->

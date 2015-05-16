@@ -1,4 +1,4 @@
 class Task
-  constructor: (@data) ->
+  constructor: (@data, @retryCount = 5) ->
 
 exports = module.exports = Task
