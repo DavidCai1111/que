@@ -12,6 +12,7 @@ class BasicQue
     @end = false
     @emitter = new events.EventEmitter()
     @showLog = false #TODO logger
+    @highWaterMark = 1000 #TODO high water mark
     @running = 0
     @limit = 5
     @emitter.on 'push', ((task) ->
@@ -36,8 +37,10 @@ class BasicQue
     Promise.resolve @queue.length
 
   push: (value) ->
-    @queue.push new Task value
-    @emitter.emit 'push', value
+    co.call @,() ->
+      if @highWaterMark != 0 && (@highWaterMark <= (yield @getQueLength())) then nextTick @run.bind @
+      @queue.push new Task value
+      @emitter.emit 'push', value
 
   shift: () ->
     Promise.resolve @queue.shift()
@@ -67,7 +70,7 @@ class BasicQue
         console.error "【Que】第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，此任务还剩余的重试次数为#{task.retryCount--}次"
         @process task
       else
-        console.error "【Que】第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，错误尝试次数已用尽，放弃此次任务"
+        console.error "【Que】第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，错误尝试次数已用尽，放弃此次任务"
         @rejected += 1
         @running -= 1
         @emit 'retryFailed', error, task.data
