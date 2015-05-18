@@ -37,8 +37,6 @@ class BasicQue
     Promise.resolve @queue.length
 
   push: (value) ->
-    co.call @,() ->
-      if @highWaterMark != 0 && (@highWaterMark <= (yield @getQueLength())) then nextTick @run.bind @
       @queue.push new Task value
       @emitter.emit 'push', value
 
@@ -46,7 +44,7 @@ class BasicQue
     Promise.resolve @queue.shift()
 
   processor: (@processor) ->
-    unless typeof @processor().then == 'function' then throw new Error '【Que】处理函数必须返回一个Promise'
+    unless typeof @processor().then == 'function' then throw new Error "【Que】#{@name}: 处理函数必须返回一个Promise"
     @run()
 
   run: () ->
@@ -60,17 +58,17 @@ class BasicQue
       nextTick @run.bind @
 
   process: (task) ->
-    co.call @,() ->
+    co.call @, () ->
       result = yield @processor task.data
       @processed += 1
       @running -= 1
       @emit 'done', result, @processed
     .catch ((error) ->
       if task.retryCount > 0
-        console.error "【Que】第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，此任务还剩余的重试次数为#{task.retryCount--}次"
+        console.error "【Que】#{@name}: 第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，此任务还剩余的重试次数为#{task.retryCount--}次"
         @process task
       else
-        console.error "【Que】第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，错误尝试次数已用尽，放弃此次任务"
+        console.error "【Que】#{@name}: 第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，错误尝试次数已用尽，放弃此次任务"
         @rejected += 1
         @running -= 1
         @emit 'retryFailed', error, task.data

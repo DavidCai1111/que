@@ -12,12 +12,14 @@ class Que extends BasicQue
     if typeof value == 'function' then throw new Error "【Que】#{@name}: 传入的队列的必须是基本值或非函数对象"
     unless @redis then throw new Error "【Que】#{@name}: 这个任务队列已经关闭"
 
-    value = JSON.stringify new Task value
+    co.call @, () ->
+      if @highWaterMark != 0 && (@highWaterMark <= (yield @getQueLength())) then return
+      value = JSON.stringify new Task value
 
-    @redis.rpush [@name, value], ((err) ->
-      if err then reject err
-      @emitter.emit 'push', value
-    ).bind @
+      @redis.rpush [@name, value], ((err) ->
+        if err then reject err
+        @emitter.emit 'push', value
+      ).bind @
 
   shift: () ->
     new Promise ((resolve, reject) ->
@@ -38,7 +40,7 @@ class Que extends BasicQue
     @redis.lrem [@name,0,-1], ((err, nRemoved) ->
       Redis.releaseClient @redis
       @end = true
-      console.log "【Que】清空队列并退出！清空了队列中剩余的#{nRemoved}个元素"
+      console.log "【Que】#{@name}: 清空队列并退出！清空了队列中剩余的#{nRemoved}个元素"
     ).bind @
 
 module.exports = Que
