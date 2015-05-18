@@ -5,7 +5,7 @@ Task = require './Task'
 nextTick = if global.setImmediate == undefined then process.nextTick else global.setImmediate
 
 class BasicQue
-  constructor: (@name = 'anonymous queue') ->
+  constructor: (@name = '匿名队列') ->
     @queue = []
     @processed = 0
     @rejected = 0
@@ -37,8 +37,8 @@ class BasicQue
     Promise.resolve @queue.length
 
   push: (value) ->
-      @queue.push new Task value
-      @emitter.emit 'push', value
+    @queue.push new Task value
+    @emitter.emit 'push', value
 
   shift: () ->
     Promise.resolve @queue.shift()
@@ -54,7 +54,7 @@ class BasicQue
       if @end then return
       task = yield @shift()
       @running += 1
-      @process task
+      @process.call @, task
       nextTick @run.bind @
 
   process: (task) ->
@@ -66,7 +66,7 @@ class BasicQue
     .catch ((error) ->
       if task.retryCount > 0
         console.error "【Que】#{@name}: 第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，此任务还剩余的重试次数为#{task.retryCount--}次"
-        @process task
+        @process.call @, task
       else
         console.error "【Que】#{@name}: 第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，错误尝试次数已用尽，放弃此次任务"
         @rejected += 1
