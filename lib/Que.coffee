@@ -8,7 +8,6 @@ class Que extends BasicQue
   constructor: (@name = '匿名队列') ->
     super @name
     @redis = Redis.createClient()
-#TODO 以下为分布式状态下特有事件
 
   master: (@salves) ->
     @masterServer = new netWork.master @emitter, @salves

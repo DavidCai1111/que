@@ -1,6 +1,6 @@
 netWork = {}
 
 netWork.master = require './master'
-netWork.salve = require './slave/salve'
+netWork.salve = require './salve'
 
 module.exports = netWork
