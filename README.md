@@ -131,7 +131,7 @@ queueName: 赋予任务队列的名字，用于区分不同队列，在分布模
 #### push(taskData)
 taskData: 待处理数据
 
-将待处理数据推入任务队列
+将待处理数据推入任务队列（`redis list`），暂只支持本地`redis`
 
 #### processor(handler)
 handler(taskData): 数据的处理函数，参数既是队列中的一个待处理数据，必须返回一个Promise实例
@@ -148,13 +148,17 @@ handler(taskData): 数据的处理函数，参数既是队列中的一个待处�
 获取队列中重试5次仍未成功后被放弃的任务数
 
 #### master([salves]).listen(port)
-[salves]: 分布模式中，所有`salve工作节点`的地址数组
+
+[saleves]: 分布模式中，所有`salve工作节点`的地址数组
+
 port: 此`master分配调度节点`的监听端口
 
 启动分布模式，将此Que作为master节点，并指定所有salves
 
 #### salve(handler).listen(port)
+
 handler(taskData): 数据的处理函数，参数既是队列中的一个待处理数据，必须返回一个Promise实例
+
 port: 此`salve工作节点`的监听端口
 
 #### stop()
