@@ -6,7 +6,7 @@
 一个基于`redis`的任务队列，支持分布式（基于http），可横向拓展，错误警告与重试。
 
 ## benchmark
-在自己的最低配阿里云上，利用`ab`发起10k并发任务请求：
+在自己的最低配阿里云上（单核CPU，1GB内存，1M带宽），利用`ab`发起10k并发任务请求（[script](https://github.com/DavidCai1993/que/blob/master/benchmark/script.coffee)）：
 ```SHELL
 ab -n 10000 -c 10000 -p 'post.txt' -T 'application/json' http://127.0.0.1:8083/task
 ```
