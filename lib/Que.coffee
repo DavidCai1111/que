@@ -53,7 +53,7 @@ class Que extends BasicQue
         result = yield @processor task.data
       @processed += 1
       @running -= 1
-      @emit 'done', result, @processed
+      @emit 'done', null, result
     .catch ((error) ->
       if task.retryCount > 0
         console.error "【Que】#{@name}: 第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，此任务还剩余的重试次数为#{task.retryCount--}次"
@@ -62,7 +62,7 @@ class Que extends BasicQue
         console.error "【Que】#{@name}: 第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，错误尝试次数已用尽，放弃此次任务"
         @rejected += 1
         @running -= 1
-        @emit 'retryFailed', error, task.data
+        @emit 'done', error
     ).bind @
 
   stop: () ->

@@ -18,7 +18,14 @@
     "superagent": "^1.2.0"
   },
   "devDependencies": {
+    "eventproxy": "^0.3.3",
     "gulp": "^3.8.11",
-    "gulp-coffee": "^2.3.1"
+    "gulp-coffee": "^2.3.1",
+    "gulp-istanbul": "^0.9.0",
+    "gulp-mocha": "^2.0.1",
+    "istanbul": "^0.3.14",
+    "mocha": "^2.2.5",
+    "should": "^6.0.3",
+    "supertest": "^1.0.1"
   }
 }
