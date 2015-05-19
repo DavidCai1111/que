@@ -6,7 +6,7 @@
 一个基于`redis`的任务队列，支持分布式（基于http），可横向拓展，错误警告与重试。
 
 ## benchmark
-在自己的最低配阿里云上，利用`ab`发起10k并发任务请求：
+在自己的最低配阿里云上（单核CPU，1GB内存，1M带宽），利用`ab`发起10k并发任务请求（[script](https://github.com/DavidCai1993/que/blob/master/benchmark/script.coffee)）：
 ```SHELL
 ab -n 10000 -c 10000 -p 'post.txt' -T 'application/json' http://127.0.0.1:8083/task
 ```
@@ -61,13 +61,13 @@ Percentage of the requests served within a certain time (ms)
 > Que使用了ES6的相关特性，请在运行时加上`harmony`选项
 
 ```SHELL
-npm install que --save
+npm install node-que --save
 ```
 
 ### 例子
 ```coffee
 #单机模式
-Que = require 'que'
+Que = require 'node-que'
 
 queue = new Que 'myTaskQue'
 queue.on 'done', (err, result) ->
@@ -89,7 +89,7 @@ for i in [0..10]
 ```coffee
 #分布模式
 #master，调度分配节点
-Que = require 'que'
+Que = require 'node-que'
 request = require 'superagent'
 
 masterQue = new Que 'myTaskQue'
