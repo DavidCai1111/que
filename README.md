@@ -2,13 +2,17 @@
 [![Build Status](https://travis-ci.org/DavidCai1993/que.svg)](https://travis-ci.org/DavidCai1993/que)
 [![Coverage Status](https://coveralls.io/repos/DavidCai1993/que/badge.svg?branch=master)](https://coveralls.io/r/DavidCai1993/que?branch=master)
 
-que
+## 简介
+一个基于`redis`的任务队列，支持分布式（基于http），可横向拓展，错误警告与重试。
 
+## benchmark
+在自己的最低配阿里云上，利用`ab`发起10k并发任务请求：
 ```SHELL
 ab -n 10000 -c 10000 -p 'post.txt' -T 'application/json' http://127.0.0.1:8083/task
 ```
 
 ```SHELL
+#output
 Server Software:
 Server Hostname:        127.0.0.1
 Server Port:            8083
@@ -49,4 +53,126 @@ Percentage of the requests served within a certain time (ms)
   99%   7952
  100%  11185 (longest request)
 ```
+
+## 使用
+
+### 安装
+直接通过npm：
+> Que使用了ES6的相关特性，请在运行时加上`harmony`选项
+
+```SHELL
+npm install que --save
+```
+
+### 例子
+```coffee
+#单机模式
+Que = require 'que'
+
+queue = new Que 'myTaskQue'
+queue.on 'done', (err, result) ->
+  if err then console.error err
+  console.log "done! result: #{result}"
+
+handler = (taskData) ->
+  new Promise (resolve, reject) ->
+    #对传入数据进行自定义操作...
+    resolve taskData.data
+    
+#指定处理函数
+queue.processor handler
+
+for i in [0..10]
+  queue.push {data: 'myData'}
+```
+
+```coffee
+#分布模式
+#master，调度分配节点
+Que = require 'que'
+
+masterQue = new Que 'myTaskQue'
+masterQue.master(['http://localhost:8081', 'http://localhost:8082']).listen 8083
+masterQue.on 'done', (err, result) ->
+  if err then console.error err
+  console.log "done! result: #{result}"
+
+#salve，工作节点
+handler = (taskData) ->
+  new Promise (resolve, reject) ->
+    #对传入数据进行自定义操作...
+    resolve taskData.data
+
+salveQue1 = new Que 'myTaskQue'
+salveQue2 = new Que 'myTaskQue'
+salveQue1.salve(handler).listen 8081
+salveQue2.salve(handler).listen 8082
+
+#从脚本中向队列推入数据
+for i in [0..10]
+  masterQue.push {data: 'by script'}
+#通过http api向队列推入数据
+request
+  .post 'http://localhost:8083/task'
+  .send {data: 'by http api'}
+  .set 'Accept', 'application/json'
+  .end (err, res) ->
+    if err then console.error err
+    console.log res.status
+```
+
+### API
+
+#### new Que(queueName)
+queueName: 赋予任务队列的名字，用于区分不同队列，在分布模式下，`master`/`salve`队列的名字必须相同
+
+生成一个Que实例
+
+#### push(taskData)
+taskData: 待处理数据
+
+将待处理数据推入任务队列
+
+#### processor(handler)
+handler(taskData): 数据的处理函数，参数既是队列中的一个待处理数据，必须返回一个Promise实例
+
+指定数据的处理函数
+
+#### 错误处理与重试
+队列中的每个任务在处理出现错误时，`Que`都会对其进行重试，若重试`5次`仍然未成功，则放弃这个任务
+
+#### getNumberOfProcessed()
+获取队列中已经处理完成的任务数
+
+#### getNumberOfRejected()
+获取队列中重试5次仍未成功后被放弃的任务数
+
+#### master([salves]).listen(port)
+[salves]: 分布模式中，所有`salve工作节点`的地址数组
+port: 此`master分配调度节点`的监听端口
+
+启动分布模式，将此Que作为master节点，并指定所有salves
+
+#### salve(handler).listen(port)
+handler(taskData): 数据的处理函数，参数既是队列中的一个待处理数据，必须返回一个Promise实例
+port: 此`salve工作节点`的监听端口
+
+#### stop()
+关闭队列
+
+### http API
+
+#### POST /task
+将待处理数据推入处理队列
+
+#### GET /task/processed
+获取队列中已经处理完成的任务数
+
+#### GET /task/rejected
+获取队列中重试5次仍未成功后被放弃的任务数
+
+
+
+
+
 
