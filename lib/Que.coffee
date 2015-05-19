@@ -8,14 +8,10 @@ class Que extends BasicQue
   constructor: (@name = '匿名队列') ->
     super @name
     @redis = Redis.createClient()
-
-  master: (@salves) ->
-    @masterServer = new netWork.master @emitter, @salves
-    @run()
-
-  salve: (handler) ->
-    @salveServer = netWork.salve handler
-    @salveServer
+    @emitter.on 'network push', ((value) ->
+      console.log 'network push'
+      @push value
+    ).bind @
 
   push: (value) ->
     if typeof value == 'function' then throw new Error "【Que】#{@name}: 传入的队列的必须是基本值或非函数对象"
@@ -71,5 +67,15 @@ class Que extends BasicQue
       @end = true
       console.log "【Que】#{@name}: 清空队列并退出！清空了队列中剩余的#{nRemoved}个元素"
     ).bind @
+
+  master: (@salves) ->
+    @masterServer = new netWork.master @, @salves
+    @run()
+    @masterServer
+
+  salve: (handler) ->
+    @salveServer = netWork.salve handler
+    @salveServer
+
 
 module.exports = Que

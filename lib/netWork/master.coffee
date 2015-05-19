@@ -1,8 +1,12 @@
 util = require 'util'
 request = require 'superagent'
+koa = require 'koa'
+router = require('koa-router')()
+bodyParser = require 'koa-bodyparser'
+json = require 'koa-json'
 
 class master
-  constructor: (@emitter, @salves) ->
+  constructor: (@que, @salves)  ->
     unless util.isArray @salves then throw new Error "【Que】#{@name}: salves必须为数组"
 
   distribute: (task) ->
@@ -21,5 +25,27 @@ class master
           reject res.text
       @salves.push salve
     ).bind @
+
+  listen: (port) ->
+    server = koa()
+    server.use bodyParser()
+    server.use json()
+    ctx = @
+    router.post '/task', () ->
+      value = @request.body
+      ctx.que.push value
+      yield @body = {message: 'ok!'}
+
+    router.get '/task/processed', () ->
+      numOfProcessed = ctx.que.getNumberOfProcessed()
+      yield @body = {processed: numOfProcessed}
+
+    router.get '/task/rejected', () ->
+      numOfRejected = ctx.que.getNumberOfRejected()
+      yield @body = {rejected: numOfRejected}
+
+    server.use router.routes()
+    server.use router.allowedMethods()
+    server.listen port
 
 module.exports = master

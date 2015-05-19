@@ -1,22 +1,24 @@
 should = require 'should'
 EventProxy = require 'eventproxy'
+request = require 'superagent'
 Que = require '../index'
 
 describe 'test distribution mode', () ->
   it 'should done all tasks', (done) ->
+    @timeout 1000 * 30
     masterQue = new Que 'test que'
     ep = new EventProxy()
 
-    ep.after 'done', 10 , () ->
+    ep.after 'done', 11, () ->
       processed = masterQue.getNumberOfProcessed()
       rejected = masterQue.getNumberOfRejected()
       console.log "processed : #{processed}"
       console.log "rejected : #{rejected}"
-      (processed + rejected).should.be.equal 10
+      (processed + rejected).should.be.equal 11
       masterQue.stop()
       done()
 
-    masterQue.master ['http://localhost:8081','http://localhost:8082']
+    masterQue.master(['http://localhost:8081', 'http://localhost:8082']).listen 8083
     masterQue.on 'done', (err, result) ->
       if err then console.error err
       ep.emit 'done'
@@ -34,3 +36,11 @@ describe 'test distribution mode', () ->
 
     for i in [0..10]
       masterQue.push {data: 'data'}
+
+    request
+      .post 'http://localhost:8083/task'
+      .send {data: 'haha'}
+      .set 'Accept', 'application/json'
+      .end (err, res) ->
+        if err then console.error err
+        console.log res.status

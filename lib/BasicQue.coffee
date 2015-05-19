@@ -16,6 +16,7 @@ class BasicQue
     @running = 0
     @limit = 5
     @emitter.on 'push', ((task) ->
+      console.log "push! #{task}"
       if @end == true
         @end = false
         @run()
