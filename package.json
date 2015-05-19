@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --harmony ./node_modules/gulp/bin/gulp.js && node --harmony node_modules/istanbul/lib/cli.js cover _mocha build/test"
   },
-  "author": "",
+  "author": "DavidCai1993",
   "license": "ISC",
   "dependencies": {
     "co": "^4.5.4",
