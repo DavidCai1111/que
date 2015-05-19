@@ -61,13 +61,13 @@ Percentage of the requests served within a certain time (ms)
 > Que使用了ES6的相关特性，请在运行时加上`harmony`选项
 
 ```SHELL
-npm install que --save
+npm install node-que --save
 ```
 
 ### 例子
 ```coffee
 #单机模式
-Que = require 'que'
+Que = require 'node-que'
 
 queue = new Que 'myTaskQue'
 queue.on 'done', (err, result) ->
@@ -89,7 +89,7 @@ for i in [0..10]
 ```coffee
 #分布模式
 #master，调度分配节点
-Que = require 'que'
+Que = require 'node-que'
 request = require 'superagent'
 
 masterQue = new Que 'myTaskQue'
