@@ -90,6 +90,7 @@ for i in [0..10]
 #分布模式
 #master，调度分配节点
 Que = require 'que'
+request = require 'superagent'
 
 masterQue = new Que 'myTaskQue'
 masterQue.master(['http://localhost:8081', 'http://localhost:8082']).listen 8083
@@ -147,9 +148,9 @@ handler(taskData): 数据的处理函数，参数既是队列中的一个待处�
 #### getNumberOfRejected()
 获取队列中重试5次仍未成功后被放弃的任务数
 
-#### master([salves]).listen(port)
+#### master(salves).listen(port)
 
-[saleves]: 分布模式中，所有`salve工作节点`的地址数组
+salves: 分布模式中，所有`salve工作节点`的地址数组
 
 port: 此`master分配调度节点`的监听端口
 
