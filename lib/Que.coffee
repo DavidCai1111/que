@@ -8,10 +8,6 @@ class Que extends BasicQue
   constructor: (@name = '匿名队列') ->
     super @name
     @redis = Redis.createClient()
-    @emitter.on 'network push', ((value) ->
-      console.log 'network push'
-      @push value
-    ).bind @
 
   push: (value) ->
     if typeof value == 'function' then throw new Error "【Que】#{@name}: 传入的队列的必须是基本值或非函数对象"
