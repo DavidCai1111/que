@@ -15,12 +15,10 @@ class BasicQue
     @highWaterMark = 1000 #TODO high water mark
     @running = 0
     @limit = 5
-    @emitter.on 'push', ((task) ->
+    @emitter.on 'push', (task) =>
       if @end == true
         @end = false
         @run()
-    ).bind @
-
     @on = @emitter.on
     @emit = @emitter.emit
 
@@ -48,7 +46,7 @@ class BasicQue
     @run()
 
   run: () ->
-    co.call @, () ->
+    co () =>
       if @running >= @limit then return nextTick @run.bind @
       if (yield @getQueLength()) == 0 then @end = true
       if @end then return
@@ -58,12 +56,12 @@ class BasicQue
       nextTick @run.bind @
 
   process: (task) ->
-    co.call @, () ->
+    co () =>
       result = yield @processor task.data
       @processed += 1
       @running -= 1
       @emit 'done', null, result
-    .catch ((error) ->
+    .catch (error) =>
       if task.retryCount > 0
         console.error "【Que】#{@name}: 第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，此任务还剩余的重试次数为#{task.retryCount--}次"
         @process.call @, task
@@ -72,7 +70,6 @@ class BasicQue
         @rejected += 1
         @running -= 1
         @emit 'done', error
-    ).bind @
 
   stop: () ->
     @end = true

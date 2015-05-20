@@ -13,32 +13,29 @@ class Que extends BasicQue
     if typeof value == 'function' then throw new Error "【Que】#{@name}: 传入的队列的必须是基本值或非函数对象"
     unless @redis then throw new Error "【Que】#{@name}: 这个任务队列已经关闭"
 
-    co.call @, () ->
+    co () =>
       if @highWaterMark != 0 && (@highWaterMark <= (yield @getQueLength())) then return
       value = JSON.stringify new Task value
 
-      @redis.rpush [@name, value], ((err) ->
+      @redis.rpush [@name, value], (err) =>
         if err then throw err
         @emitter.emit 'push', value
-      ).bind @
 
   shift: () ->
-    new Promise ((resolve, reject) ->
+    new Promise (resolve, reject) =>
       @redis.lpop [@name], (err, result) ->
         if err then reject err
         result = JSON.parse result
         resolve result
-    ).bind @
 
   getQueLength: () ->
-    new Promise ((resolve, reject) ->
+    new Promise (resolve, reject) =>
       @redis.llen [@name], (err, length) ->
         if err then reject err
         resolve length
-    ).bind @
 
   process: (task) ->
-    co.call @, () ->
+    co () =>
       if @masterServer != undefined
         result = yield @masterServer.distribute task.data
       else
@@ -46,7 +43,7 @@ class Que extends BasicQue
       @processed += 1
       @running -= 1
       @emit 'done', null, result
-    .catch ((error) ->
+    .catch (error) =>
       if task.retryCount > 0
         console.error "【Que】#{@name}: 第#{@processed + 1}个任务出错，错误信息 '#{error.message}' ，开始重试，此任务还剩余的重试次数为#{task.retryCount--}次"
         @process.call @, task
@@ -55,14 +52,12 @@ class Que extends BasicQue
         @rejected += 1
         @running -= 1
         @emit 'done', error
-    ).bind @
 
   stop: () ->
-    @redis.lrem [@name, 0, -1], ((err, nRemoved) ->
+    @redis.lrem [@name, 0, -1], (err, nRemoved) =>
       Redis.releaseClient @redis
       @end = true
       console.log "【Que】#{@name}: 清空队列并退出！清空了队列中剩余的#{nRemoved}个元素"
-    ).bind @
 
   master: (@salves) ->
     @masterServer = new netWork.master @, @salves

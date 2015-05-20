@@ -10,7 +10,7 @@ class master
     unless util.isArray @salves then throw new Error "【Que】#{@name}: salves必须为数组"
 
   distribute: (task) ->
-    new Promise ((resolve, reject) ->
+    new Promise (resolve, reject) =>
       salve = @salves.shift()
       request
       .post salve + '/process'
@@ -24,7 +24,6 @@ class master
         else
           reject res.text
       @salves.push salve
-    ).bind @
 
   listen: (port) ->
     server = koa()
