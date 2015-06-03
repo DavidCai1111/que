@@ -14,7 +14,7 @@ class Que extends BasicQue
     unless @redis then throw new Error "【Que】#{@name}: 这个任务队列已经关闭"
 
     co () =>
-      if @highWaterMark != 0 && (@highWaterMark <= (yield @getQueLength())) then return
+      if @highWaterMark != 0 and (@highWaterMark <= (yield @getQueLength())) then return
       value = JSON.stringify new Task value
 
       @redis.rpush [@name, value], (err) =>

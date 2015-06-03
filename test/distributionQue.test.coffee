@@ -34,8 +34,7 @@ describe 'test distribution mode', () ->
     salveQue1.salve(handler).listen 8081
     salveQue2.salve(handler).listen 8082
 
-    for i in [0..10]
-      masterQue.push {data: 'data'}
+    masterQue.push {data: 'data'} for i in [0..10]
 
     request
       .post 'http://localhost:8083/task'

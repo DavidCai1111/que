@@ -25,5 +25,4 @@ describe 'test singleton mode', () ->
 
     que.processor handler
 
-    for i in [0..10]
-      que.push {data: 'data'}
+    que.push {data: 'data'} for i in [0..10]
