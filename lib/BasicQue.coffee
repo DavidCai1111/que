@@ -2,7 +2,7 @@ events = require 'events'
 co = require 'co'
 Task = require './Task'
 
-nextTick = if global.setImmediate == undefined then process.nextTick else global.setImmediate
+nextTick = if global.setImmediate is undefined then process.nextTick else global.setImmediate
 
 class BasicQue
   constructor: (@name = '匿名队列') ->
@@ -16,39 +16,34 @@ class BasicQue
     @running = 0
     @limit = 5
     @emitter.on 'push', (task) =>
-      if @end == true
+      if @end is true
         @end = false
         @run()
     @on = @emitter.on
     @emit = @emitter.emit
 
-  getNumberOfProcessed: () ->
-    @processed
+  getNumberOfProcessed: () -> @processed
 
-  getNumberOfRejected: () ->
-    @rejected
+  getNumberOfRejected: () -> @rejected
 
-  isEnd: () ->
-    @end
+  isEnd: () -> @end
 
-  getQueLength: () ->
-    Promise.resolve @queue.length
+  getQueLength: () -> Promise.resolve @queue.length
+
+  shift: () -> Promise.resolve @queue.shift()
 
   push: (value) ->
     @queue.push new Task value
     @emitter.emit 'push', value
 
-  shift: () ->
-    Promise.resolve @queue.shift()
-
   processor: (@processor) ->
-    unless typeof @processor().then == 'function' then throw new Error "【Que】#{@name}: 处理函数必须返回一个Promise"
+    unless typeof @processor().then is 'function' then throw new Error "【Que】#{@name}: 处理函数必须返回一个Promise"
     @run()
 
   run: () ->
     co () =>
       if @running >= @limit then return nextTick @run.bind @
-      if (yield @getQueLength()) == 0 then @end = true
+      if (yield @getQueLength()) is 0 then @end = true
       if @end then return
       task = yield @shift()
       @running += 1
@@ -71,10 +66,8 @@ class BasicQue
         @running -= 1
         @emit 'done', error
 
-  stop: () ->
-    @end = true
+  stop: () -> @end = true
 
-  restart: () ->
-    unless @queue.length == 0 then @end = false
+  restart: () -> unless @queue.length is 0 then @end = false
 
 module.exports = BasicQue

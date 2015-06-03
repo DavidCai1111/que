@@ -10,11 +10,11 @@ class Que extends BasicQue
     @redis = Redis.createClient()
 
   push: (value) ->
-    if typeof value == 'function' then throw new Error "【Que】#{@name}: 传入的队列的必须是基本值或非函数对象"
+    if typeof value is 'function' then throw new Error "【Que】#{@name}: 传入的队列的必须是基本值或非函数对象"
     unless @redis then throw new Error "【Que】#{@name}: 这个任务队列已经关闭"
 
     co () =>
-      if @highWaterMark != 0 and (@highWaterMark <= (yield @getQueLength())) then return
+      if @highWaterMark isnt 0 and (@highWaterMark <= (yield @getQueLength())) then return
       value = JSON.stringify new Task value
 
       @redis.rpush [@name, value], (err) =>
@@ -36,7 +36,7 @@ class Que extends BasicQue
 
   process: (task) ->
     co () =>
-      if @masterServer != undefined
+      if @masterServer isnt undefined
         result = yield @masterServer.distribute task.data
       else
         result = yield @processor task.data
