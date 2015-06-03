@@ -58,7 +58,7 @@ Percentage of the requests served within a certain time (ms)
 
 ### 安装
 直接通过npm：
-> Que使用了ES6的相关特性，请在运行时加上`harmony`选项
+> que使用了ES6的相关特性，请在运行时加上`harmony`选项，或者使用io.js运行
 
 ```SHELL
 npm install node-que --save
