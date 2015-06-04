@@ -82,8 +82,7 @@ handler = (taskData) ->
 #指定处理函数
 queue.processor handler
 
-for i in [0..10]
-  queue.push {data: 'myData'}
+queue.push {data: 'myData'} for i in [0..10]
 ```
 
 ```coffee
@@ -110,8 +109,8 @@ salveQue1.salve(handler).listen 8081
 salveQue2.salve(handler).listen 8082
 
 #从脚本中向队列推入数据
-for i in [0..10]
-  masterQue.push {data: 'by script'}
+masterQue.push {data: 'by script'} for i in [0..10]
+
 #通过http api向队列推入数据
 request
   .post 'http://localhost:8083/task'
@@ -175,9 +174,3 @@ port: 此`salve工作节点`的监听端口
 
 #### GET /task/rejected
 获取队列中重试5次仍未成功后被放弃的任务数
-
-
-
-
-
-
